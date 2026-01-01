@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <menuitem id="menu_biomed_maintenance_root"
+              name="BioMed Maintenance"
+              web_icon="biomed_maintenance,static/description/icon.png"
+              sequence="10"/>
+
+    <menuitem id="menu_biomed_operations"
+              name="Opérations"
+              parent="menu_biomed_maintenance_root"
+              sequence="10"/>
+
+    <menuitem id="menu_biomed_maintenance_orders"
+              name="Ordres de Maintenance"
+              parent="menu_biomed_operations"
+              action="action_biomed_maintenance_order"
+              sequence="10"/>
+    
+    <menuitem id="menu_biomed_config"
+              name="Configuration"
+              parent="menu_biomed_maintenance_root"
+              sequence="100"
+              groups="base.group_system"/>
+</odoo>
