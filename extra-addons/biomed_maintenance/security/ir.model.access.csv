@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_maintenance_order_user,biomed.maintenance.order.user,model_biomed_maintenance_order,base.group_user,1,1,1,0
+access_maintenance_order_manager,biomed.maintenance.order.manager,model_biomed_maintenance_order,base.group_system,1,1,1,1
+access_maintenance_part_user,biomed.maintenance.part.user,model_biomed_maintenance_part,base.group_user,1,1,1,1

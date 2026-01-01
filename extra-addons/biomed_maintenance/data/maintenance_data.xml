@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <record id="seq_biomed_maintenance_order" model="ir.sequence">
+            <field name="name">Séquence Maintenance BioMed</field>
+            <field name="code">biomed.maintenance.order</field>
+            <field name="prefix">MO/%(year)s/</field>
+            <field name="padding">3</field>
+            <field name="company_id" eval="False"/>
+        </record>
+    </data>
+</odoo>
