@@ -48,6 +48,7 @@ Fonctionnalités Clés :
 
         # 3. INTERFACE UTILISATEUR (VUES) : Charge les menus et formulaires
         'views/maintenance_order_views.xml',
+        'views/maintenance_menu.xml',
     ],
 
     # ==========================================================================
