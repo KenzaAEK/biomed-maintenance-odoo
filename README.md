@@ -92,10 +92,6 @@ Pour vérifier le bon fonctionnement du module, vous pouvez tester les descripti
 | *"L'écran reste noir au démarrage"* | 🔧 Catégorie: **Électronique** (Confiance > 90%) | Machine Learning |
 | *"L'image est floue"* | 🔭 Catégorie: **Optique** | Machine Learning |
 
-## 📂 Structure du Module
-
-biomed_maintenance/ ├── init.py ├── manifest.py          # Métadonnées et dépendances ├── models/ │   ├── maintenance_order.py # Logique métier + Appels API ML ├── views/ │   ├── maintenance_order_views.xml # Vues Formulaire, Liste, Kanban │   ├── maintenance_menu.xml ├── security/ │   ├── ir.model.access.csv  # Droits d'accès ├── data/ │   ├── maintenance_sequence.xml └── static/ └── description/icon.png
-
 ## 👤 Auteur
 
 **ABOU-EL KASEM Kenza**
