@@ -5,18 +5,19 @@ services:
     image: odoo:17.0
     depends_on:
       - db
-      - ml_engine  # AJOUTER CETTE LIGNE
+      - ml_engine
     ports:
       - "8069:8069"
     volumes:
-      - odoo-data:/var/lib/odoo
-      - ./biomed_maintenance:/mnt/extra-addons/biomed_maintenance
+      # FIX: We point this to the old "web-data" volume
+      - old_web_data:/var/lib/odoo
+      - ./extra-addons:/mnt/extra-addons
     environment:
       - HOST=db
       - USER=odoo
       - PASSWORD=odoo
     networks:
-      - odoo_network  # IMPORTANT
+      - odoo_network
 
   db:
     image: postgres:15
@@ -25,7 +26,8 @@ services:
       - POSTGRES_USER=odoo
       - POSTGRES_PASSWORD=odoo
     volumes:
-      - db-data:/var/lib/postgresql/data
+      # This is already correct (your old database)
+      - old_db_data:/var/lib/postgresql/data
     networks:
       - odoo_network
 
@@ -36,16 +38,23 @@ services:
     volumes:
       - ./ml_engine:/app
     networks:
-      - odoo_network  # MÊME RÉSEAU QUE ODOO
+      - odoo_network
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health"]
       interval: 10s
       timeout: 5s
       retries: 3
 
 volumes:
-  odoo-data:
-  db-data:
+  # Connection to your Old Database (Keep this!)
+  old_db_data:
+    external: true
+    name: projetodoo_odoo-db-data
+
+  # Connection to your Old Filestore (Add this!)
+  old_web_data:
+    external: true
+    name: projetodoo_odoo-web-data   # <--- This is where the CSS files are hiding
 
 networks:
   odoo_network:
