@@ -4,64 +4,50 @@
         <field name="name">biomed.maintenance.order.form</field>
         <field name="model">biomed.maintenance.order</field>
         <field name="arch" type="xml">
-            <form string="Ordre de Maintenance">
+            <form>
                 <header>
-                    <button name="action_confirm" string="Confirmer" type="object" 
-                            class="oe_highlight" invisible="state != 'draft'"/>
-                    
-                    <button name="action_start" string="Démarrer" type="object" 
-                            class="oe_highlight" invisible="state != 'confirmed'"/>
-                    
-                    <button name="action_done" string="Clôturer" type="object" 
-                            class="oe_highlight" invisible="state != 'in_progress'"/>
-                    
-                    <button name="action_cancel" string="Annuler" type="object" 
-                            invisible="state in ('done', 'cancelled')"/>
-                    
-                    <field name="state" widget="statusbar" 
-                           statusbar_visible="draft,confirmed,in_progress,done"/>
+                    <button name="action_confirm" string="Confirmer" type="object" class="oe_highlight" invisible="state != 'draft'"/>
+                    <button name="action_start" string="Démarrer" type="object" class="oe_highlight" invisible="state != 'confirmed'"/>
+                    <button name="action_done" string="Clôturer" type="object" class="oe_highlight" invisible="state != 'in_progress'"/>
+                    <button name="action_cancel" string="Annuler" type="object" invisible="state in ('done', 'cancelled')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,confirmed,in_progress,done"/>
                 </header>
-                
                 <sheet>
-                    <div class="alert alert-danger" role="alert" 
-                         invisible="not bio_hazard">
-                        <div class="d-flex align-items-center">
-                            <i class="fa fa-exclamation-triangle fa-2x mr-3"/>
-                            <div>
-                                <strong>⚠️ ALERTE RISQUE BIOLOGIQUE DÉTECTÉ</strong><br/>
-                                Équipement EPI requis : Gants, masque FFP2, blouse jetable
-                            </div>
-                        </div>
+                    <!-- ========== ALERTE RISQUE BIOLOGIQUE ========== -->
+                    <div class="alert alert-danger" role="alert" invisible="not bio_hazard">
+                        <strong>⚠️ RISQUE BIOLOGIQUE</strong> : EPI Requis (Gants, Masque FFP2)
                     </div>
-
-                    <field name="ai_analysis_log" readonly="1" 
-                           invisible="not ai_analysis_log"
-                           class="alert alert-warning"/>
-
+                    
                     <div class="oe_title">
-                        <h1>
-                            <field name="name" readonly="1"/>
-                        </h1>
+                        <h1><field name="name" readonly="1"/></h1>
                     </div>
-
+                    
+                    <!-- ========== SECTION CLIENT &amp; ÉQUIPEMENT ========== -->
                     <group>
-                        <group string="Informations Client">
-                            <field name="partner_id" widget="res_partner_many2one" 
-                                   context="{'show_address': 1}" options="{'always_reload': True}"/>
+                        <group>
+                            <field name="partner_id"/>
                             <field name="sale_order_id" readonly="1"/>
                         </group>
-                        
-                        <group string="Équipement Concerné">
-                            <field name="lot_id" options="{'no_create': True}"/>
+                        <group>
+                            <field name="lot_id"/>
                             <field name="product_id"/>
                         </group>
                     </group>
-
+                    
+                    <!-- ========== SECTION DIAGNOSTIC IA ========== -->
                     <group>
                         <group string="Diagnostic">
-                            <field name="description" placeholder="Décrivez la panne (ex: Fumée, Bruit, Erreur E04)..."/>
+                            <field name="description" placeholder="Décrivez les symptômes observés..."/>
                             <field name="priority" widget="priority"/>
                             <field name="bio_hazard"/>
+                            
+                            <!-- ========== NOUVEAU : CATÉGORIE ML ========== -->
+                            <field name="category" widget="badge" 
+                                   invisible="not category"
+                                   decoration-info="category == 'Electronique'"
+                                   decoration-success="category == 'Optique'"
+                                   decoration-warning="category == 'Software'"
+                                   decoration-danger="category == 'Hydraulique'"/>
                         </group>
                         
                         <group string="Planification">
@@ -70,67 +56,86 @@
                             <field name="duration" widget="float_time"/>
                         </group>
                     </group>
-
+                    
+                    <!-- ========== LOG ANALYSE IA ========== -->
+                    <group invisible="not ai_analysis_log">
+                        <group>
+                            <field name="ai_analysis_log" readonly="1" widget="text"/>
+                        </group>
+                    </group>
+                    
+                    <!-- ========== DÉTAILS INTERVENTION ========== -->
                     <notebook>
                         <page string="Rapport d'Intervention">
-                            <field name="intervention_report" placeholder="Détails techniques de la réparation effectuée..."/>
+                            <field name="intervention_report" 
+                                   placeholder="Détails de l'intervention effectuée..."/>
                         </page>
-                        <page string="Pièces Consommées">
+                        <page string="Pièces Détachées">
                             <field name="part_ids">
                                 <tree editable="bottom">
                                     <field name="product_id"/>
                                     <field name="quantity"/>
-                                    <field name="note"/>
+                                    <field name="note" placeholder="Notes..."/>
                                 </tree>
                             </field>
                         </page>
                     </notebook>
                 </sheet>
-
+                
+                <!-- ========== CHATTER (TRAÇABILITÉ) ========== -->
                 <div class="oe_chatter">
                     <field name="message_follower_ids"/>
-                    <field name="activity_ids"/>
                     <field name="message_ids"/>
                 </div>
             </form>
         </field>
     </record>
 
+    <!-- ========== VUE LISTE ========== -->
     <record id="view_biomed_maintenance_order_tree" model="ir.ui.view">
         <field name="name">biomed.maintenance.order.tree</field>
         <field name="model">biomed.maintenance.order</field>
         <field name="arch" type="xml">
-            <tree string="Ordres de Maintenance" 
-                  decoration-danger="priority == '3'" 
-                  decoration-warning="bio_hazard == True"
-                  sample="1">
+            <tree decoration-danger="priority == '3'" 
+                  decoration-warning="bio_hazard == True">
                 <field name="name"/>
-                <field name="date_scheduled" widget="remaining_days"/>
+                <field name="date_scheduled"/>
                 <field name="partner_id"/>
-                <field name="lot_id"/>
-                <field name="product_id" optional="hide"/>
                 <field name="priority" widget="priority"/>
                 <field name="bio_hazard" optional="show"/>
-                <field name="technician_id" widget="many2one_avatar_user"/>
+                
+                <!-- ========== NOUVEAU : CATÉGORIE ML ========== -->
+                <field name="category" optional="show" 
+                       decoration-info="category == 'Electronique'"
+                       decoration-success="category == 'Optique'"
+                       decoration-warning="category == 'Software'"
+                       decoration-danger="category == 'Hydraulique'"/>
+                
                 <field name="state" widget="badge" 
                        decoration-info="state == 'draft'" 
-                       decoration-warning="state == 'in_progress'" 
                        decoration-success="state == 'done'"/>
             </tree>
         </field>
     </record>
 
+    <!-- ========== VUE KANBAN ========== -->
     <record id="view_biomed_maintenance_order_kanban" model="ir.ui.view">
         <field name="name">biomed.maintenance.order.kanban</field>
         <field name="model">biomed.maintenance.order</field>
         <field name="arch" type="xml">
-            <kanban default_group_by="state" class="o_kanban_small_column" sample="1">
+            <kanban default_group_by="state" class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="partner_id"/>
                 <field name="priority"/>
                 <field name="bio_hazard"/>
+                <field name="category"/>
+                <field name="state"/>
+                <field name="product_id"/>
+                <field name="date_scheduled"/>
                 <field name="technician_id"/>
                 <templates>
                     <t t-name="kanban-box">
-                        <div class="oe_kanban_global_click">
+                        <div class="oe_kanban_card oe_kanban_global_click">
                             <div class="oe_kanban_content">
                                 <div class="o_kanban_record_top">
                                     <div class="o_kanban_record_headings">
@@ -138,22 +143,35 @@
                                             <field name="name"/>
                                         </strong>
                                     </div>
-                                    <div class="o_dropdown_kanban dropdown">
+                                    <div class="o_kanban_record_top_right">
                                         <field name="priority" widget="priority"/>
                                     </div>
                                 </div>
-                                <div class="text-muted o_kanban_record_subtitle">
+                                
+                                <div class="o_kanban_record_body">
                                     <field name="partner_id"/>
-                                </div>
-                                <div class="mt-2">
-                                    <field name="lot_id"/>
-                                </div>
-                                <div class="o_kanban_record_bottom mt-3">
-                                    <div class="oe_kanban_bottom_left">
+                                    <br/>
+                                    <field name="product_id"/>
+                                    
+                                    <!-- ========== BADGES ========== -->
+                                    <div class="mt-2">
                                         <span t-if="record.bio_hazard.raw_value" 
-                                              class="badge text-bg-danger">
-                                            ☣️ BIO
-                                        </span>
+                                              class="badge badge-danger">☣️ BIO</span>
+                                        
+                                        <span t-if="record.category.raw_value == 'Electronique'" 
+                                              class="badge badge-info">⚡ Électronique</span>
+                                        <span t-if="record.category.raw_value == 'Optique'" 
+                                              class="badge badge-success">🔍 Optique</span>
+                                        <span t-if="record.category.raw_value == 'Software'" 
+                                              class="badge badge-warning">💻 Logiciel</span>
+                                        <span t-if="record.category.raw_value == 'Hydraulique'" 
+                                              class="badge badge-danger">💧 Hydraulique</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="o_kanban_record_bottom">
+                                    <div class="oe_kanban_bottom_left">
+                                        <field name="date_scheduled" widget="date"/>
                                     </div>
                                     <div class="oe_kanban_bottom_right">
                                         <field name="technician_id" widget="many2one_avatar_user"/>
@@ -167,18 +185,23 @@
         </field>
     </record>
 
+    <!-- ========== ACTION PRINCIPALE ========== -->
     <record id="action_biomed_maintenance_order" model="ir.actions.act_window">
         <field name="name">Ordres de Maintenance</field>
         <field name="res_model">biomed.maintenance.order</field>
         <field name="view_mode">kanban,tree,form</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
-                Aucun ordre de maintenance trouvé
+                Créer un premier ordre de maintenance
             </p>
             <p>
-                Créez une nouvelle intervention. L'IA analysera automatiquement la description.
+                Le système analysera automatiquement la description avec IA pour détecter :
             </p>
+            <ul>
+                <li>🔥 Les urgences critiques (fumée, incendie)</li>
+                <li>☣️ Les risques biologiques (sang, virus)</li>
+                <li>🤖 La catégorie technique (Électronique, Optique, Software, Hydraulique)</li>
+            </ul>
         </field>
     </record>
-
-    </odoo>
+</odoo>
