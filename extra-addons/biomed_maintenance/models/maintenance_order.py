@@ -60,22 +60,54 @@ class BiomedMaintenanceOrder(models.Model):
 
     @api.onchange('description')
     def _onchange_ai_triage(self):
-        if not self.description: return
+        # 1. Sécurité : Si la description est vidée, on réinitialise les alertes
+        if not self.description:
+            self.priority = '1'
+            self.bio_hazard = False
+            self.ai_analysis_log = False
+            return
+
         text = self.description.lower()
         warnings = []
         
-        # Regex pour éviter les faux positifs
-        if any(re.search(p, text) for p in [r'fumée', r'feu\b', r'étincelle', r'brûlé', r'urgence', r'choc']):
-            self.priority = '3'
-            warnings.append("URGENCE DÉTECTÉE : Risque machine ou patient.")
-            
-        if any(re.search(p, text) for p in [r'sang', r'virus', r'bactérie', r'fluide', r'contamin']):
-            self.bio_hazard = True
-            warnings.append("RISQUE BIO DÉTECTÉ : Protocole EPI activé.")
+        # CONFIGURATION DES MOTS-CLÉS
+        # Priorité 3 (Urgence Vitale / Danger Incendie)
+        critical_patterns = [r'fumée', r'feu\b', r'étincelle', r'brûlé', r'explosion', r'choc', r'court-circuit']
+        # Priorité 2 (Panne Bloquante / Inutilisable)
+        high_patterns = [r'panne', r'bloqué', r'erreur', r'anomalie', r'dysfonctionnement', r'cassé', r'ne démarre plus']
+        # Risque Bio (Indépendant de la priorité technique)
+        bio_patterns = [r'sang', r'virus', r'bactérie', r'fluide', r'contamin', r'covid', r'exposition']
 
+        # LOGIQUE DE TRIAGE TECHNIQUE ---
+        new_priority = '1' # Par défaut : Normale (1 étoile)
+        
+        if any(re.search(p, text) for p in critical_patterns):
+            new_priority = '3' # Critique (3 étoiles)
+            warnings.append("🚨 ALERTE CRITIQUE : Risque d'incendie ou d'accident majeur détecté.")
+        elif any(re.search(p, text) for p in high_patterns):
+            new_priority = '2' # Élevée (2 étoiles)
+            warnings.append("⚠️ PANNE MAJEURE : L'équipement est hors-service et nécessite une intervention rapide.")
+        
+        self.priority = new_priority
+
+        # LOGIQUE DE RISQUE BIOLOGIQUE ---
+        if any(re.search(p, text) for p in bio_patterns):
+            self.bio_hazard = True
+            warnings.append("☣️ RISQUE BIOLOGIQUE : Présence de contaminants suspectée. Protocole EPI requis.")
+        else:
+            self.bio_hazard = False
+
+        # FEEDBACK UTILISATEUR ---
         if warnings:
             self.ai_analysis_log = "\n".join(warnings)
-            return {'warning': {'title': 'BioMed AI', 'message': "\n".join(warnings)}}
+            return {
+                'warning': {
+                    'title': 'Analyse BioMed AI Security',
+                    'message': "\n".join(warnings) + "\n\nLes paramètres de sécurité ont été ajustés automatiquement."
+                }
+            }
+        else:
+            self.ai_analysis_log = False
 
     # --- WORKFLOW (LES BOUTONS) ---
     @api.model
